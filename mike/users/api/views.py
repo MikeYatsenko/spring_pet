@@ -1,6 +1,6 @@
 from rest_framework.generics import GenericAPIView
-from rest_framework import status
-from .serializers import RegisterSerializer
+from rest_framework import status, views
+from .serializers import RegisterSerializer, EmailVerificationSerializer, LoginSerializer
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from ..models import User
@@ -8,6 +8,8 @@ from ..utils import Utils
 from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
 from django.conf import settings
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 import jwt
 
 
@@ -36,7 +38,11 @@ class RegisterView(GenericAPIView):
         return Response(user_data,status=status.HTTP_201_CREATED)
     
 
-class VerifyEmail(GenericAPIView):
+class VerifyEmail(views.APIView):
+    serializer_class = EmailVerificationSerializer
+
+    token_config = openapi.Parameter('token', in_= openapi.IN_QUERY,description='Description', type=openapi.TYPE_STRING)
+    @swagger_auto_schema(manual_parameters=[token_config])
     def get(self, request):
         token = request.GET.get('token')
         try:
@@ -51,5 +57,14 @@ class VerifyEmail(GenericAPIView):
             return Response({'error': 'The link has expired'}, status=status.HTTP_400_BAD_REQUEST)
         except jwt.exceptions.DecodeError:
             return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class LoginAPIVIew(GenericAPIView):
+    serializer_class = LoginSerializer
+    def post(self,request):
+        serializer = self.serializer_class(data=request.user)
+        serializer.is_valid(raise_exception=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
