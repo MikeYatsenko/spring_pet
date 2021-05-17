@@ -1,26 +1,56 @@
 from rest_framework import viewsets, generics, status
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from news.api.serializers import PostSerializer, CommentSerializer
-from news.api.permissions import IsAuthorOrReadOnly
-from news.models import Post, Comment
+from .serializers import PostSerializer, CommentSerializer
+from .permissions import IsAuthorOrReadOnly, IsRedactor
+from ..models import Post, Comment
 
 
-class PostViewSet(viewsets.ModelViewSet):
-    queryset = Post.objects.all()
-    lookup_field = "slug"
+class PostListView(generics.ListCreateAPIView):
     serializer_class = PostSerializer
-    permission_classes = [IsAuthenticated, IsAuthorOrReadOnly]
+    lookup_field = "slug"
+    queryset = Post.objects.all()
+    permission_classes = [IsAuthenticated]
+
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
+class PostDetailView(viewsets.RetrieveUpdateDestroyAPIView):
+    serializer_class = PostSerializer
+    queryset = Post.objects.all()
+    lookup_field = "slug"
+    permission_classes = (IsRedactor, IsAuthorOrReadOnly,)
+
+    def delete(self, request, slug):
+        kwargs_slug = self.kwargs.get("slug")
+        post = get_object_or_404(Post, slug=kwargs_slug)
+        post.delete()
+        post.save()
+
+        serializer_context = {"request": request}
+        serializer = self.serializer_class(post, context=serializer_context)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def perform_update(self, serializer):
+        request_user = self.request.user
+        kwargs_slug = self.kwargs.get("slug")
+        post = get_object_or_404(Post, slug=kwargs_slug)
+        serializer.save(author=request_user, post=post)
+
+
+
+
+
+
+
 
 class PostVoteAPIView(APIView):
     serializer_class = PostSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def post(self, request, slug):
         kwargs_slug = self.kwargs.get("slug")
