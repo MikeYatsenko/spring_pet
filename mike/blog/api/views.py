@@ -1,10 +1,10 @@
 from rest_framework import viewsets, generics, status
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .serializers import PostSerializer, CommentSerializer
-from .permissions import IsAuthorOrReadOnly, IsRedactor
+from .permissions import IsAuthorOrReadOnly
 from ..models import Post, Comment
 
 
@@ -18,34 +18,11 @@ class PostListView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
-class PostDetailView(viewsets.RetrieveUpdateDestroyAPIView):
+class PostDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = PostSerializer
     queryset = Post.objects.all()
     lookup_field = "slug"
-    permission_classes = (IsRedactor, IsAuthorOrReadOnly,)
-
-    def delete(self, request, slug):
-        kwargs_slug = self.kwargs.get("slug")
-        post = get_object_or_404(Post, slug=kwargs_slug)
-        post.delete()
-        post.save()
-
-        serializer_context = {"request": request}
-        serializer = self.serializer_class(post, context=serializer_context)
-
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def perform_update(self, serializer):
-        request_user = self.request.user
-        kwargs_slug = self.kwargs.get("slug")
-        post = get_object_or_404(Post, slug=kwargs_slug)
-        serializer.save(author=request_user, post=post)
-
-
-
-
-
-
+    permission_classes = [IsAdminUser|IsAuthorOrReadOnly]
 
 
 class PostVoteAPIView(APIView):

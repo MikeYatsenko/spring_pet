@@ -11,9 +11,11 @@ STRING_LENGTH = 3
 def generate_random_string(chars = ALPHANUMERIC_CHARS, length = STRING_LENGTH):
      return "".join(random.choice(chars)for _ in range(length))
 
-def my_slug_func(content):
+def my_slug_func(title):
     string = generate_random_string()
-    return '{}_{}'.format(string,content)
+    title_x = str((title.replace(' ','_')))
+    title_z = title_x.lower()
+    return '{}_{}'.format(string,title_z)
 
 
 class Post(models.Model):
@@ -21,7 +23,9 @@ class Post(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     content = models.TextField()
     title = models.CharField(max_length=100)
-    slug = AutoSlugField(populate_from='title', slugify=my_slug_func)
+    slug = AutoSlugField(populate_from=lambda instance: instance.title,
+                         unique_with=['author', 'creation_date'],
+                         slugify=my_slug_func)
     author = models.ForeignKey(to=User, on_delete=models.CASCADE, related_name='blog')
     voters = models.ManyToManyField(to=User, related_name='voters')
 
