@@ -22,7 +22,7 @@ class PostDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = PostSerializer
     queryset = Post.objects.all()
     lookup_field = "slug"
-    permission_classes = [IsAdminUser|IsAuthorOrReadOnly]
+    permission_classes = [IsAdminUser]
 
 
 class PostVoteAPIView(APIView):
