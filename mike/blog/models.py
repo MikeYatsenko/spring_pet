@@ -15,7 +15,7 @@ def my_slug_func(title):
     string = generate_random_string()
     title_x = str((title.replace(' ','_')))
     title_z = title_x.lower()
-    return '{}_{}'.format(string,title_z)
+    return title_z
 
 
 class Post(models.Model):
