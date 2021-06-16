@@ -1,4 +1,6 @@
 from celery import shared_task
+
+
 @shared_task
-def adding_task(x, y):
-    return x + y
+def sample_task():
+    print("The sample task just ran.")

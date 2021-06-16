@@ -15,7 +15,8 @@ from pathlib import Path
 import os
 from os.path import join, dirname
 from dotenv import load_dotenv
-
+from celery.schedules import crontab
+from blog import tasks
 dotenv_path = join(dirname(__file__), '.env')
 load_dotenv(dotenv_path)
 
@@ -67,7 +68,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'users',
     'blog',
-    'drf_yasg'
+    'drf_yasg',
+    'django_celery_results',
+    'django_celery_beat'
 
 ]
 
@@ -197,3 +200,9 @@ CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'Europe/Moscow'
+CELERY_BEAT_SCHEDULE = {
+    "sample_task": {
+        "task": "blog.tasks.sample_task",
+        "schedule": timedelta(seconds=15),
+    },
+}

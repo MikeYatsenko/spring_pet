@@ -23,7 +23,7 @@ class Post(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     content = models.TextField()
     title = models.CharField(max_length=100)
-    slug = AutoSlugField(populate_from=lambda instance: instance.title,
+    slug = AutoSlugField(populate_from='title',
                          unique_with=['author', 'creation_date'],
                          slugify=my_slug_func)
     author = models.ForeignKey(to=User, on_delete=models.CASCADE, related_name='blog')
