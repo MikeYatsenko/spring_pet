@@ -1,0 +1,60 @@
+version: "3.3"
+
+services:
+  django:
+    build: ./mike
+    container_name: django
+    command:  python manage.py runserver
+    volumes:
+      - ./mike/:/usr/src/app/
+    ports:
+      - 8000:8000
+    environment:
+      - DEBUG=1
+      - SECRET_KEY = django-insecure-lb!mqw)ift3_b$e%93l86r6^y%drh1vp7&c*yi55ufqk=v)42(
+      - CELERY_BROKER = redis://redis:6379
+      - CELERY_BACKEND = redis://redis:6379
+    depends_on:
+      - db
+      - redis
+
+  celery:
+    build: ./mike
+    environment:
+      - DEBUG=1
+      - SECRET_KEY=django-insecure-lb!mqw)ift3_b$e%93l86r6^y%drh1vp7&c*yi55ufqk=v)42(
+      - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]
+    command: celery -A mike worker --loglevel=info
+    depends_on:
+      - django
+      - redis
+
+  db:
+    image: 'postgres:12'
+    environment:
+      - "POSTGRES_HOST_AUTH_METHOD=trust"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+
+
+
+
+
+  celery-beat:
+    build: ./mike
+    container_name: celery-beat
+    command: celery -A mike beat -l info
+    volumes:
+      - ./mike/:/usr/src/app/
+    environment:
+      - DEBUG=1
+      - SECRET_KEY=django-insecure-lb!mqw)ift3_b$e%93l86r6^y%drh1vp7&c*yi55ufqk=v)42(
+      - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]
+    depends_on:
+      - redis
+  redis:
+    image: redis:alpine
+
+volumes:
+  postgres_data:
+
