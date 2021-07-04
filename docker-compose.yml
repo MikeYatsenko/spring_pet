@@ -4,11 +4,11 @@ services:
   django:
     build: ./mike
     container_name: django
-    command:  python manage.py runserver
+    command:  python manage.py runserver 0.0.0.0:8000
     volumes:
       - ./mike/:/usr/src/app/
     ports:
-      - 8000:8000
+      - "8000:8000"
     environment:
       - DEBUG=1
       - SECRET_KEY = django-insecure-lb!mqw)ift3_b$e%93l86r6^y%drh1vp7&c*yi55ufqk=v)42(
